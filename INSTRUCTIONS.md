@@ -14,6 +14,21 @@ them straight in.
 
 ## Live
 
+Two hosts, same content, deployed separately.
+
+| Host | URL | Deploy | Notes |
+| --- | --- | --- | --- |
+| Lightsail (primary) | https://test.marcusg.co | `./deploy.sh` | Sends `Cache-Control: no-store` and `X-Robots-Tag: noindex` as real headers |
+| GitHub Pages | https://toddlerfight.github.io/test-proto/ | `git push` | Serves `Cache-Control: max-age=600`; cannot set custom headers, so `noindex` relies on the meta tag alone |
+
+The two are independent. A change is only on both once you have run `./deploy.sh`
+**and** pushed. All internal links are relative, so the site works from a subpath.
+
+Repo: https://github.com/toddlerfight/test-proto — **public**, because Pages from a
+private repo needs a paid plan.
+
+### Lightsail detail
+
 - URL: https://test.marcusg.co
 - Host: Lightsail 15.134.89.136, nginx site `test.marcusg.co`, docroot `/var/www/test-proto`
 - DNS: **Name.com** (marcusg.co is delegated to `ns1cmt`/`ns2gtx`/`ns3bgq`/`ns4cfn.name.com`,

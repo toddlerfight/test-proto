@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>What you can borrow — Step 1 of 3</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+
+<div class="warnbar" role="alert">
+  <div class="warnbar__title">Research prototype — not a real service</div>
+  <div class="warnbar__sub">Nothing here is real. Do not enter real personal or financial details.</div>
+</div>
+
+
+<header class="masthead">
+  <div class="masthead__inner">
+    <div class="wordmark">Northline <span>Home Loans</span></div>
+    <div class="wordmark" style="font-weight:450;color:var(--ink-faint)">Step 1 of 3</div>
+  </div>
+</header>
+
+<main class="shell">
+
+  <ol class="steps">
+    <li class="steps__item" data-state="current"><span class="steps__dot">1</span><span>Money in and out</span></li>
+    <li class="steps__item"><span class="steps__dot">2</span><span>Deposit</span></li>
+    <li class="steps__item"><span class="steps__dot">3</span><span>Repayments</span></li>
+  </ol>
+
+  <form class="card" id="form" novalidate>
+
+    <h1 class="card__title">What's coming in, what's going out</h1>
+    <p class="card__lede">We'll turn this into a borrowing estimate as you type.</p>
+
+    <div class="readout" id="readout">
+      <div class="readout__label">Estimated borrowing power</div>
+      <div class="readout__figure" id="power">$0</div>
+      <div class="readout__note" id="powerNote">Fill in your income to get started.</div>
+    </div>
+
+    <details class="working">
+      <summary>How we worked that out</summary>
+      <div class="working__body" id="working"></div>
+    </details>
+
+    <div class="summary-error" role="alert">Some details need your attention. They're marked below.</div>
+
+    <div class="field" data-group-required data-error-id="err-applicants"
+         data-msg-required="Choose who's applying." role="group" aria-labelledby="lbl-applicants">
+      <span class="field__label" id="lbl-applicants">Who's applying?</span>
+      <div class="choices">
+        <label class="choice">
+          <input type="radio" name="applicants" value="1">
+          <span>
+            <span class="choice__title">Just me</span>
+            <span class="choice__desc">A single application in your name.</span>
+          </span>
+        </label>
+        <label class="choice">
+          <input type="radio" name="applicants" value="2">
+          <span>
+            <span class="choice__title">Two of us</span>
+            <span class="choice__desc">A joint application. We'll ask for a second income.</span>
+          </span>
+        </label>
+      </div>
+      <p class="error" id="err-applicants"></p>
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="income1">Your monthly take-home pay
+        <span class="field__hint">After tax. What actually lands in the account.</span>
+      </label>
+      <div class="money">
+        <span class="money__tag">$</span>
+        <input class="input" id="income1" name="income1" type="text" inputmode="numeric"
+               data-validate="required" data-error-id="err-income1"
+               data-msg-required="Enter your monthly take-home pay.">
+      </div>
+      <p class="error" id="err-income1"></p>
+    </div>
+
+    <!-- Only exists if they said two applicants. Shown and required together. -->
+    <div class="field" id="income2Field" hidden>
+      <label class="field__label" for="income2">Their monthly take-home pay
+        <span class="field__hint">Your co-applicant's, after tax.</span>
+      </label>
+      <div class="money">
+        <span class="money__tag">$</span>
+        <input class="input" id="income2" name="income2" type="text" inputmode="numeric"
+               data-error-id="err-income2">
+      </div>
+      <p class="error" id="err-income2"></p>
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="dependants">Children or dependants
+        <span class="field__hint">Each one adds an assumed $400 a month to your living costs.</span>
+      </label>
+      <select class="select" id="dependants" name="dependants">
+        <option value="0">None</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4 or more</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="expenses">Monthly living expenses
+        <span class="field__hint">Groceries, fuel, bills, insurance, everything that isn't rent or debt.</span>
+      </label>
+      <div class="money">
+        <span class="money__tag">$</span>
+        <input class="input" id="expenses" name="expenses" type="text" inputmode="numeric"
+               data-validate="required" data-error-id="err-expenses"
+               data-msg-required="Enter your monthly living expenses.">
+      </div>
+      <p class="error" id="err-expenses"></p>
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label class="field__label" for="debts">Monthly loan repayments
+          <span class="field__hint">Car, personal, HECS.</span>
+        </label>
+        <div class="money">
+          <span class="money__tag">$</span>
+          <input class="input" id="debts" name="debts" type="text" inputmode="numeric" value="0">
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="cardLimit">Total credit card limit
+          <span class="field__hint">The limit, not the balance.</span>
+        </label>
+        <div class="money">
+          <span class="money__tag">$</span>
+          <input class="input" id="cardLimit" name="cardLimit" type="text" inputmode="numeric" value="0">
+        </div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <a class="btn btn--ghost" href="../">Back</a>
+      <button class="btn btn--primary" type="submit">Continue</button>
+    </div>
+
+    <p class="disclaimer">
+      An indicative estimate only, not an offer of finance. Assessed at
+      <span id="assessedRate"></span> — the current rate plus a 3 percentage point buffer —
+      over 30 years, keeping 10% of your surplus in reserve.
+    </p>
+
+  </form>
+
+  <p class="footnote" style="margin-top:20px">
+    Prototype for research. No data is sent anywhere.
+    <a href="#" data-restart>Start over</a> &nbsp;·&nbsp; <a href="../">All prototypes</a>
+  </p>
+
+</main>
+
+<script src="../app.js"></script>
+<script>
+Store.ns = 'proto.calc';
+
+/* Step 1 is where the number is born. Every figure on steps 2 and 3 is a
+ * descendant of what happens here, so it recalculates on every keystroke —
+ * a participant who can't see the cause never learns the effect. */
+
+const form = document.getElementById('form');
+markSteps(1);
+rehydrate(form, Store.read());
+
+document.getElementById('assessedRate').textContent =
+  pct(ASSUMPTIONS.defaultRate + ASSUMPTIONS.serviceBuffer, 2);
+
+/* Second income appears only for a joint application, and is only required
+   when it's actually on screen. */
+function syncApplicants() {
+  const joint = form.applicants.value === '2';
+  const field = document.getElementById('income2Field');
+  field.hidden = !joint;
+  form.income2.toggleAttribute('data-validate', joint);
+  if (joint) {
+    form.income2.dataset.validate = 'required';
+    form.income2.dataset.msgRequired = "Enter your co-applicant's take-home pay.";
+  } else {
+    delete form.income2.dataset.validate;
+    clearError(form.income2);
+  }
+}
+
+function recalc() {
+  const d = harvest(form);
+  if (form.applicants.value !== '2') d.income2 = 0;
+
+  const b = borrowingPower(d);
+  const fig  = document.getElementById('power');
+  const note = document.getElementById('powerNote');
+  const box  = document.getElementById('readout');
+
+  fig.textContent = money(b.power);
+  box.classList.toggle('readout--warn', b.surplus <= 0 && b.income > 0);
+
+  if (!b.income) {
+    note.textContent = 'Fill in your income to get started.';
+  } else if (b.surplus <= 0) {
+    note.textContent = 'Your outgoings match or exceed what comes in, so there’s nothing left to service a loan.';
+  } else {
+    note.textContent = money(b.surplus) + ' a month left over. We’ll commit ' +
+      money(b.capacity) + ' of it to repayments.';
+  }
+
+  document.getElementById('working').innerHTML =
+    row('Take-home pay', money(b.income)) +
+    row('Living expenses', '− ' + money(num(d.expenses)), 'sub') +
+    (num(d.dependants) ? row(num(d.dependants) + ' dependant' + (num(d.dependants) > 1 ? 's' : '') +
+        ' at ' + money(ASSUMPTIONS.dependantAllowance),
+        '− ' + money(num(d.dependants) * ASSUMPTIONS.dependantAllowance), 'sub') : '') +
+    (num(d.debts) ? row('Loan repayments', '− ' + money(num(d.debts)), 'sub') : '') +
+    (num(d.cardLimit) ? row('Card limit at ' + pct(ASSUMPTIONS.cardFactor * 100, 1),
+        '− ' + money(num(d.cardLimit) * ASSUMPTIONS.cardFactor), 'sub') : '') +
+    row('Monthly surplus', money(b.surplus), 'total') +
+    row('Committed to repayments (90%)', money(b.capacity)) +
+    row('Serviced over 30 years at ' + pct(b.assessed, 2), money(b.power), 'total');
+}
+
+function row(label, value, kind) {
+  const cls = 'working__row' + (kind ? ' working__row--' + kind : '');
+  return '<div class="' + cls + '"><span>' + esc(label) + '</span><span>' + esc(value) + '</span></div>';
+}
+
+form.addEventListener('input', recalc);
+form.addEventListener('change', () => { syncApplicants(); recalc(); });
+
+wireLiveClearing(form);
+syncApplicants();
+recalc();
+
+form.addEventListener('submit', (e) => {
+  e.preventDefault();
+  if (!validate(form)) return;
+  const d = harvest(form);
+  if (form.applicants.value !== '2') d.income2 = 0;
+  const b = borrowingPower(d);
+  if (b.power <= 0) {
+    const box = document.querySelector('.summary-error');
+    box.textContent = 'On these numbers there’s nothing left to service a loan. Adjust your expenses to continue.';
+    box.setAttribute('data-shown', '');
+    box.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    return;
+  }
+  Store.write({ ...d, power: b.power, surplus: b.surplus, capacity: b.capacity });
+  location.href = 'step-2.html';
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Create your account — Step 1 of 3</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+
+<div class="warnbar" role="alert">
+  <div class="warnbar__title">Research prototype — not a real service</div>
+  <div class="warnbar__sub">Nothing here is real. Do not enter real personal or financial details.</div>
+</div>
+
+
+<header class="masthead">
+  <div class="masthead__inner">
+    <div class="wordmark">Northline <span>Accounts</span></div>
+    <div class="wordmark" style="font-weight:450;color:var(--ink-faint)">Step 1 of 3</div>
+  </div>
+</header>
+
+<main class="shell">
+
+  <ol class="steps">
+    <li class="steps__item" data-state="current"><span class="steps__dot">1</span><span>About you</span></li>
+    <li class="steps__item"><span class="steps__dot">2</span><span>Your details</span></li>
+    <li class="steps__item"><span class="steps__dot">3</span><span>Review</span></li>
+  </ol>
+
+  <form class="card" id="form" novalidate>
+
+    <h1 class="card__title">Let's start with the basics</h1>
+    <p class="card__lede">We'll use this to set up your account. It takes about two minutes.</p>
+
+    <div class="summary-error" role="alert">Some details need your attention. They're marked below.</div>
+
+    <div class="row">
+      <div class="field">
+        <label class="field__label" for="firstName">First name</label>
+        <input class="input" id="firstName" name="firstName" type="text" autocomplete="given-name"
+               data-validate="required" data-error-id="err-firstName"
+               data-msg-required="Enter your first name.">
+        <p class="error" id="err-firstName"></p>
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="lastName">Last name</label>
+        <input class="input" id="lastName" name="lastName" type="text" autocomplete="family-name"
+               data-validate="required" data-error-id="err-lastName"
+               data-msg-required="Enter your last name.">
+        <p class="error" id="err-lastName"></p>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="email">Email address
+        <span class="field__hint">This becomes your sign-in and where we send confirmations.</span>
+      </label>
+      <input class="input" id="email" name="email" type="email" autocomplete="email" inputmode="email"
+             data-validate="required email" data-error-id="err-email"
+             data-msg-required="Enter your email address.">
+      <p class="error" id="err-email"></p>
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="country">Where are you based?
+        <span class="field__hint">Determines which registration details we ask for next.</span>
+      </label>
+      <select class="select" id="country" name="country" data-validate="required" data-error-id="err-country"
+              data-msg-required="Choose where you're based.">
+        <option value="">Select a country</option>
+        <option value="au">Australia</option>
+        <option value="nz">New Zealand</option>
+        <option value="other">Somewhere else</option>
+      </select>
+      <p class="error" id="err-country"></p>
+    </div>
+
+    <div class="field" data-group-required data-error-id="err-accountType"
+         data-msg-required="Choose an account type." role="group" aria-labelledby="lbl-accountType">
+      <span class="field__label" id="lbl-accountType">What kind of account is this?</span>
+      <div class="choices">
+        <label class="choice">
+          <input type="radio" name="accountType" value="personal">
+          <span>
+            <span class="choice__title">Personal</span>
+            <span class="choice__desc">Just you. No business or organisation attached.</span>
+          </span>
+        </label>
+        <label class="choice">
+          <input type="radio" name="accountType" value="business">
+          <span>
+            <span class="choice__title">Business</span>
+            <span class="choice__desc">A company, sole trader or partnership.</span>
+          </span>
+        </label>
+        <label class="choice">
+          <input type="radio" name="accountType" value="nonprofit">
+          <span>
+            <span class="choice__title">Non-profit</span>
+            <span class="choice__desc">A charity, association or community organisation.</span>
+          </span>
+        </label>
+      </div>
+      <p class="error" id="err-accountType"></p>
+    </div>
+
+    <div class="actions">
+      <span></span>
+      <button class="btn btn--primary" type="submit">Continue</button>
+    </div>
+
+  </form>
+
+  <p class="footnote" style="margin-top:20px">
+    Prototype for research. No data is sent anywhere. <a href="#" data-restart>Start over</a> &nbsp;·&nbsp; <a href="../">All prototypes</a>
+  </p>
+
+</main>
+
+<script src="../app.js"></script>
+<script>
+Store.ns = 'proto.signup';
+
+  // Step 1 is the source of truth for everything downstream. Everything the
+  // participant does here reappears, transformed, on steps 2 and 3.
+  const form = document.getElementById('form');
+
+  markSteps(1);
+  rehydrate(form, Store.read());
+  wireLiveClearing(form);
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!validate(form)) return;
+    Store.write(harvest(form));
+    location.href = 'step-2.html';
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Your details — Step 2 of 3</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+
+<div class="warnbar" role="alert">
+  <div class="warnbar__title">Research prototype — not a real service</div>
+  <div class="warnbar__sub">Nothing here is real. Do not enter real personal or financial details.</div>
+</div>
+
+
+<header class="masthead">
+  <div class="masthead__inner">
+    <div class="wordmark">Northline <span>Accounts</span></div>
+    <div class="wordmark" style="font-weight:450;color:var(--ink-faint)">Step 2 of 3</div>
+  </div>
+</header>
+
+<main class="shell">
+
+  <ol class="steps">
+    <li class="steps__item"><span class="steps__dot">1</span><span>About you</span></li>
+    <li class="steps__item"><span class="steps__dot">2</span><span>Your details</span></li>
+    <li class="steps__item"><span class="steps__dot">3</span><span>Review</span></li>
+  </ol>
+
+  <form class="card" id="form" novalidate>
+
+    <h1 class="card__title" id="title">Your details</h1>
+    <p class="card__lede" id="lede"></p>
+
+    <div class="carried" id="carried"></div>
+
+    <div class="summary-error" role="alert">Some details need your attention. They're marked below.</div>
+
+    <!-- Everything below here is written by script, from what they entered on step 1. -->
+    <div id="fields"></div>
+
+    <div class="actions">
+      <a class="btn btn--ghost" href="index.html">Back</a>
+      <button class="btn btn--primary" type="submit">Continue</button>
+    </div>
+
+  </form>
+
+  <p class="footnote" style="margin-top:20px">
+    Prototype for research. No data is sent anywhere. <a href="#" data-restart>Start over</a> &nbsp;·&nbsp; <a href="../">All prototypes</a>
+  </p>
+
+</main>
+
+<script src="../app.js"></script>
+<script>
+Store.ns = 'proto.signup';
+
+/* This page is the whole experiment.
+ *
+ * Nothing here is hardcoded copy — the heading, the fields, the labels, the phone
+ * prefix, even the notification options are all derived from step 1. Pick
+ * "Business / Australia" and you get asked for an ABN. Pick "Non-profit / NZ" and
+ * you get Charities Services. Pick "Personal" and the whole org block never
+ * existed. Back out, change your mind on step 1, come back: it rebuilds.
+ */
+
+const d    = Store.requires('firstName', 'email', 'accountType', 'country');
+const type = accountType(d);
+const geo  = country(d);
+const form = document.getElementById('form');
+
+markSteps(2);
+
+/* ---------- header, addressed to them ---------- */
+
+document.getElementById('title').textContent = 'Nice to meet you, ' + d.firstName + '.';
+document.getElementById('lede').textContent  =
+  'A few more details and your ' + type.noun + ' is ready to review.';
+
+document.getElementById('carried').innerHTML =
+  '<span class="carried__mark" aria-hidden="true">i</span>' +
+  '<span>Setting up a <strong>' + esc(type.label.toLowerCase()) + ' account</strong> for ' +
+  '<strong>' + esc([d.firstName, d.lastName].filter(Boolean).join(' ')) + '</strong> in ' +
+  '<strong>' + esc(geo.label) + '</strong>, signing in with <strong>' + esc(d.email) + '</strong>. ' +
+  'Wrong? <a href="index.html">Change it on step 1</a>.</span>';
+
+/* ---------- the conditional fields ---------- */
+
+const phone = geo.dial ? `
+  <div class="field">
+    <label class="field__label" for="phone">Mobile number
+      <span class="field__hint">For account recovery. ${geo.dial} is set from the country you chose.</span>
+    </label>
+    <div class="prefixed">
+      <span class="prefixed__tag">${geo.dial}</span>
+      <input class="input" id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel-national"
+             data-validate="required" data-error-id="err-phone"
+             data-msg-required="Enter your mobile number.">
+    </div>
+    <p class="error" id="err-phone"></p>
+  </div>` : `
+  <div class="field">
+    <label class="field__label" for="phone">Mobile number
+      <span class="field__hint">For account recovery. Include your country code.</span>
+    </label>
+    <input class="input" id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel"
+           placeholder="+44 7700 900123"
+           data-validate="required" data-error-id="err-phone"
+           data-msg-required="Enter your mobile number, including the country code.">
+    <p class="error" id="err-phone"></p>
+  </div>`;
+
+const blocks = {
+
+  personal: `
+    <div class="field">
+      <label class="field__label" for="dob">Date of birth
+        <span class="field__hint">You must be 18 or over to hold a personal account.</span>
+      </label>
+      <input class="input" id="dob" name="dob" type="date"
+             data-validate="required" data-error-id="err-dob"
+             data-msg-required="Enter your date of birth.">
+      <p class="error" id="err-dob"></p>
+    </div>
+    ${phone}
+    <div class="field" data-group-required data-error-id="err-uses"
+         data-msg-required="Choose at least one." role="group" aria-labelledby="lbl-uses">
+      <span class="field__label" id="lbl-uses">What will you use Northline for?
+        <span class="field__hint">Choose as many as apply.</span>
+      </span>
+      <div class="checks">
+        ${check('uses[]', 'everyday', 'Everyday spending')}
+        ${check('uses[]', 'saving',   'Saving towards something')}
+        ${check('uses[]', 'sharing',  'Splitting costs with other people')}
+      </div>
+      <p class="error" id="err-uses"></p>
+    </div>`,
+
+  business: `
+    <div class="field">
+      <label class="field__label" for="orgName">Registered business name</label>
+      <input class="input" id="orgName" name="orgName" type="text" autocomplete="organization"
+             data-validate="required" data-error-id="err-orgName"
+             data-msg-required="Enter your registered business name.">
+      <p class="error" id="err-orgName"></p>
+    </div>
+    <div class="field">
+      <label class="field__label" for="regNumber">${geo.regLabel}
+        <span class="field__hint">${geo.regHint}. Required because you're registered in ${geo.label}.</span>
+      </label>
+      <input class="input" id="regNumber" name="regNumber" type="text" inputmode="numeric"
+             data-validate="required" data-error-id="err-regNumber"
+             data-msg-required="Enter your ${geo.regLabel}.">
+      <p class="error" id="err-regNumber"></p>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label class="field__label" for="teamSize">How many people work there?</label>
+        <select class="select" id="teamSize" name="teamSize"
+                data-validate="required" data-error-id="err-teamSize"
+                data-msg-required="Choose a team size.">
+          <option value="">Select</option>
+          <option>Just me</option>
+          <option>2–10</option>
+          <option>11–50</option>
+          <option>More than 50</option>
+        </select>
+        <p class="error" id="err-teamSize"></p>
+      </div>
+      <div class="field">
+        <label class="field__label" for="industry">Industry</label>
+        <select class="select" id="industry" name="industry"
+                data-validate="required" data-error-id="err-industry"
+                data-msg-required="Choose an industry.">
+          <option value="">Select</option>
+          <option>Retail or hospitality</option>
+          <option>Trades and construction</option>
+          <option>Professional services</option>
+          <option>Health and care</option>
+          <option>Something else</option>
+        </select>
+        <p class="error" id="err-industry"></p>
+      </div>
+    </div>
+    ${phone}`,
+
+  nonprofit: `
+    <div class="field">
+      <label class="field__label" for="orgName">Organisation name</label>
+      <input class="input" id="orgName" name="orgName" type="text" autocomplete="organization"
+             data-validate="required" data-error-id="err-orgName"
+             data-msg-required="Enter your organisation's name.">
+      <p class="error" id="err-orgName"></p>
+    </div>
+    <div class="field">
+      <label class="field__label" for="regNumber">${geo.charity}
+        <span class="field__hint">Required for non-profits registered in ${geo.label}.</span>
+      </label>
+      <input class="input" id="regNumber" name="regNumber" type="text"
+             data-validate="required" data-error-id="err-regNumber"
+             data-msg-required="Enter your ${geo.charity}.">
+      <p class="error" id="err-regNumber"></p>
+    </div>
+    <div class="field">
+      <label class="field__label" for="cause">Main cause area</label>
+      <select class="select" id="cause" name="cause"
+              data-validate="required" data-error-id="err-cause"
+              data-msg-required="Choose a cause area.">
+        <option value="">Select</option>
+        <option>Community and welfare</option>
+        <option>Health</option>
+        <option>Education</option>
+        <option>Environment</option>
+        <option>Arts and culture</option>
+        <option>Sport and recreation</option>
+      </select>
+      <p class="error" id="err-cause"></p>
+    </div>
+    ${phone}`
+};
+
+/* Notification block is common, but the email option quotes their actual address. */
+const notify = `
+  <div class="field" data-group-required data-error-id="err-notify"
+       data-msg-required="Choose how we should reach you." role="group" aria-labelledby="lbl-notify">
+    <span class="field__label" id="lbl-notify">How should we send account notices?</span>
+    <div class="choices">
+      <label class="choice">
+        <input type="radio" name="notify" value="email">
+        <span>
+          <span class="choice__title">Email</span>
+          <span class="choice__desc">To ${esc(d.email)}</span>
+        </span>
+      </label>
+      <label class="choice">
+        <input type="radio" name="notify" value="sms">
+        <span>
+          <span class="choice__title">Text message</span>
+          <span class="choice__desc">To the ${geo.dial ? geo.dial + ' ' : ''}number above</span>
+        </span>
+      </label>
+      <label class="choice">
+        <input type="radio" name="notify" value="both">
+        <span>
+          <span class="choice__title">Both</span>
+          <span class="choice__desc">Belt and braces</span>
+        </span>
+      </label>
+    </div>
+    <p class="error" id="err-notify"></p>
+  </div>`;
+
+document.getElementById('fields').innerHTML = (blocks[d.accountType] || blocks.personal) + notify;
+
+function check(name, value, label) {
+  return '<label class="check"><input type="checkbox" name="' + name + '" value="' + value + '">' +
+         '<span>' + label + '</span></label>';
+}
+
+
+/* ---------- wire it up (after the fields exist, obviously) ---------- */
+
+rehydrate(form, d);
+wireLiveClearing(form);
+
+form.addEventListener('submit', (e) => {
+  e.preventDefault();
+  if (!validate(form)) return;
+  // Wipe every step-2 key first — they may have doubled back and changed branch.
+  Store.drop(['dob','phone','phoneDisplay','uses','orgName','regNumber',
+              'teamSize','industry','cause','notify','consent']);
+  // Stamp the phone with the prefix they were shown, so step 3 reads back what they saw.
+  const answers = harvest(form);
+  if (answers.phone) answers.phoneDisplay = (geo.dial ? geo.dial + ' ' : '') + answers.phone;
+  Store.write(answers);
+  location.href = 'step-3.html';
+});
+</script>
+
+</body>
+</html>

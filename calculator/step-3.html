@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Repayments — Step 3 of 3</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+
+<div class="warnbar" role="alert">
+  <div class="warnbar__title">Research prototype — not a real service</div>
+  <div class="warnbar__sub">Nothing here is real. Do not enter real personal or financial details.</div>
+</div>
+
+
+<header class="masthead">
+  <div class="masthead__inner">
+    <div class="wordmark">Northline <span>Home Loans</span></div>
+    <div class="wordmark" style="font-weight:450;color:var(--ink-faint)">Step 3 of 3</div>
+  </div>
+</header>
+
+<main class="shell">
+
+  <ol class="steps">
+    <li class="steps__item"><span class="steps__dot">1</span><span>Money in and out</span></li>
+    <li class="steps__item"><span class="steps__dot">2</span><span>Deposit</span></li>
+    <li class="steps__item"><span class="steps__dot">3</span><span>Repayments</span></li>
+  </ol>
+
+  <form class="card" id="form" novalidate>
+
+    <h1 class="card__title">What it costs each month</h1>
+    <p class="card__lede" id="lede"></p>
+
+    <div class="carried" id="carried"></div>
+
+    <div class="readout">
+      <div class="readout__label">Monthly repayment</div>
+      <div class="readout__figure" id="repayment">$0</div>
+      <div class="readout__note" id="repayNote"></div>
+      <div class="readout__split">
+        <div>
+          <div class="readout__sub-label">Total interest</div>
+          <div class="readout__sub-value" id="totalInterest">$0</div>
+        </div>
+        <div>
+          <div class="readout__sub-label">Total repaid</div>
+          <div class="readout__sub-value" id="totalRepaid">$0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flag" id="flag"></div>
+
+    <div class="row">
+      <div class="field">
+        <label class="field__label" for="rate">Interest rate</label>
+        <div class="suffixed">
+          <input class="input" id="rate" name="rate" type="text" inputmode="decimal">
+          <span class="suffixed__tag">%</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="term">Loan term</label>
+        <select class="select" id="term" name="term">
+          <option value="20">20 years</option>
+          <option value="25">25 years</option>
+          <option value="30">30 years</option>
+        </select>
+      </div>
+    </div>
+
+    <details class="working" open>
+      <summary>Where these numbers came from</summary>
+      <div class="working__body" id="working"></div>
+    </details>
+
+    <div class="review" id="review"></div>
+
+    <div class="actions">
+      <a class="btn btn--ghost" href="step-2.html">Back</a>
+      <a class="btn btn--primary" href="../">Finish</a>
+    </div>
+
+    <p class="disclaimer">
+      Principal and interest, indicative only. Not an offer of finance and not personal
+      financial advice. Rates change; your lender's assessment will differ.
+    </p>
+
+  </form>
+
+  <p class="footnote" style="margin-top:20px">
+    Prototype for research. No data is sent anywhere.
+    <a href="#" data-restart>Start over</a> &nbsp;·&nbsp; <a href="../">All prototypes</a>
+  </p>
+
+</main>
+
+<script src="../app.js"></script>
+<script>
+Store.ns = 'proto.calc';
+
+/* The end of the chain. Nothing new is asked for except the rate and the term —
+ * everything else on this page is arithmetic performed on what they said two
+ * steps ago. Move the rate and watch a decision made on step 1 change value. */
+
+const d = Store.requires('income1', 'power', 'loan');
+const form = document.getElementById('form');
+markSteps(3);
+
+const loan     = num(d.loan);
+const price    = num(d.price);
+const deposit  = num(d.deposit);
+const surplus  = num(d.surplus);
+
+form.rate.value = d.rate || ASSUMPTIONS.defaultRate.toFixed(2);
+form.term.value = d.term || String(ASSUMPTIONS.defaultTerm);
+
+document.getElementById('lede').textContent =
+  'Change the rate or the term and everything below moves with it.';
+
+document.getElementById('carried').innerHTML =
+  '<span class="carried__mark" aria-hidden="true">i</span>' +
+  '<span>Borrowing <strong>' + esc(money(loan)) + '</strong> against a ' +
+  '<strong>' + esc(money(price)) + '</strong> place, with ' +
+  '<strong>' + esc(money(deposit)) + '</strong> of your own money in. ' +
+  '<a href="step-2.html">Change that</a>.</span>';
+
+function recalc() {
+  const rate = num(form.rate.value);
+  const term = num(form.term.value);
+  const monthly = repaymentFor(loan, rate, term);
+  const repaid  = monthly * term * 12;
+  const interest = repaid - loan;
+  const left = surplus - monthly;
+
+  document.getElementById('repayment').textContent     = money(monthly);
+  document.getElementById('totalInterest').textContent = money(interest);
+  document.getElementById('totalRepaid').textContent   = money(repaid);
+  document.getElementById('repayNote').textContent     =
+    'Principal and interest over ' + term + ' years at ' + pct(rate, 2) + '.';
+
+  const flag = document.getElementById('flag');
+  if (left >= 0) {
+    flag.className = 'flag flag--ok';
+    flag.innerHTML = 'That leaves <strong>' + esc(money(left)) + '</strong> a month from the ' +
+      esc(money(surplus)) + ' surplus you had on step 1.';
+  } else {
+    flag.className = 'flag';
+    flag.innerHTML = '<strong>' + esc(money(-left)) + ' a month short.</strong> ' +
+      'This repayment is more than the surplus you entered on step 1.';
+  }
+  flag.setAttribute('data-shown', '');
+
+  document.getElementById('working').innerHTML =
+    row('Property price', money(price)) +
+    row('Your deposit', '− ' + money(deposit), 'sub') +
+    row('Amount borrowed', money(loan), 'total') +
+    row('Interest over ' + term + ' years at ' + pct(rate, 2), '+ ' + money(interest), 'sub') +
+    row('Total you repay', money(repaid), 'total');
+
+  Store.write({ rate: form.rate.value, term: form.term.value,
+                monthly: Math.round(monthly), interest: Math.round(interest) });
+
+  return { rate, term, monthly, interest, repaid };
+}
+
+function row(label, value, kind) {
+  const cls = 'working__row' + (kind ? ' working__row--' + kind : '');
+  return '<div class="' + cls + '"><span>' + esc(label) + '</span><span>' + esc(value) + '</span></div>';
+}
+
+/* Full trace back to step 1, so they can see the whole chain in one place. */
+document.getElementById('review').innerHTML =
+  group('From step 1', 'index.html', [
+    ['Applicants',      d.applicants === '2' ? 'Two of us' : 'Just me'],
+    ['Take-home pay',   money(num(d.income1) + num(d.income2)) + ' a month'],
+    ['Dependants',      num(d.dependants) ? String(num(d.dependants)) : 'None'],
+    ['Living expenses', money(num(d.expenses)) + ' a month'],
+    ['Monthly surplus', money(surplus)],
+    ['Borrowing power', money(num(d.power))]
+  ]) +
+  group('From step 2', 'step-2.html', [
+    ['Property price', money(price)],
+    ['Deposit',        money(deposit)],
+    ['Loan to value',  pct(num(d.lvr), 1)]
+  ]);
+
+function group(title, href, rows) {
+  const body = rows.map(([k, v]) => '<dt>' + esc(k) + '</dt><dd>' + esc(v) + '</dd>').join('');
+  return '<section class="review__group">' +
+           '<div class="review__head">' +
+             '<h2 class="review__title">' + esc(title) + '</h2>' +
+             '<a class="review__edit" href="' + href + '">Edit</a>' +
+           '</div>' +
+           '<dl class="review__list">' + body + '</dl>' +
+         '</section>';
+}
+
+form.addEventListener('input', recalc);
+form.addEventListener('change', recalc);
+recalc();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Deposit and price — Step 2 of 3</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+
+<div class="warnbar" role="alert">
+  <div class="warnbar__title">Research prototype — not a real service</div>
+  <div class="warnbar__sub">Nothing here is real. Do not enter real personal or financial details.</div>
+</div>
+
+
+<header class="masthead">
+  <div class="masthead__inner">
+    <div class="wordmark">Northline <span>Home Loans</span></div>
+    <div class="wordmark" style="font-weight:450;color:var(--ink-faint)">Step 2 of 3</div>
+  </div>
+</header>
+
+<main class="shell">
+
+  <ol class="steps">
+    <li class="steps__item"><span class="steps__dot">1</span><span>Money in and out</span></li>
+    <li class="steps__item"><span class="steps__dot">2</span><span>Deposit</span></li>
+    <li class="steps__item"><span class="steps__dot">3</span><span>Repayments</span></li>
+  </ol>
+
+  <form class="card" id="form" novalidate>
+
+    <h1 class="card__title">Your deposit, and what you're buying</h1>
+    <p class="card__lede" id="lede"></p>
+
+    <div class="carried" id="carried"></div>
+
+    <div class="readout" id="readout">
+      <div class="readout__label">Most you could spend</div>
+      <div class="readout__figure" id="maxSpend">$0</div>
+      <div class="readout__note" id="maxNote"></div>
+      <div class="readout__split">
+        <div>
+          <div class="readout__sub-label">Loan needed</div>
+          <div class="readout__sub-value" id="loanNeeded">$0</div>
+        </div>
+        <div>
+          <div class="readout__sub-label">Deposit covers</div>
+          <div class="readout__sub-value" id="depositPct">0%</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flag" id="flag"></div>
+
+    <div class="summary-error" role="alert">Some details need your attention. They're marked below.</div>
+
+    <div class="field">
+      <label class="field__label" for="deposit">Savings you'll put in
+        <span class="field__hint">Your deposit. Every dollar here lifts the ceiling above by a dollar.</span>
+      </label>
+      <div class="money">
+        <span class="money__tag">$</span>
+        <input class="input" id="deposit" name="deposit" type="text" inputmode="numeric"
+               data-validate="required" data-error-id="err-deposit"
+               data-msg-required="Enter the deposit you'll put in.">
+      </div>
+      <p class="error" id="err-deposit"></p>
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="price">Property price
+        <span class="field__hint" id="priceHint"></span>
+      </label>
+      <div class="money">
+        <span class="money__tag">$</span>
+        <input class="input" id="price" name="price" type="text" inputmode="numeric"
+               data-validate="required" data-error-id="err-price"
+               data-msg-required="Enter the price of the place you're after.">
+      </div>
+      <input class="slider" id="priceSlider" type="range" min="0" step="5000" aria-label="Property price">
+      <p class="error" id="err-price"></p>
+    </div>
+
+    <div class="actions">
+      <a class="btn btn--ghost" href="index.html">Back</a>
+      <button class="btn btn--primary" type="submit">Continue</button>
+    </div>
+
+    <p class="disclaimer">
+      Lenders mortgage insurance generally applies when the loan is more than 80% of the
+      property value. The estimate here is indicative only.
+    </p>
+
+  </form>
+
+  <p class="footnote" style="margin-top:20px">
+    Prototype for research. No data is sent anywhere.
+    <a href="#" data-restart>Start over</a> &nbsp;·&nbsp; <a href="../">All prototypes</a>
+  </p>
+
+</main>
+
+<script src="../app.js"></script>
+<script>
+Store.ns = 'proto.calc';
+
+/* Step 2 inherits one number — the borrowing power — and spends the whole page
+ * showing what it buys. Deposit pushes the ceiling up dollar for dollar; price
+ * pushes the loan up against it. Two inputs, four figures moving. */
+
+const d = Store.requires('income1', 'power');
+const form = document.getElementById('form');
+markSteps(2);
+
+const power = num(d.power);
+
+document.getElementById('lede').textContent =
+  'We carried your borrowing estimate over. Now let’s see what it reaches.';
+
+document.getElementById('carried').innerHTML =
+  '<span class="carried__mark" aria-hidden="true">i</span>' +
+  '<span>Based on step 1 you can borrow about <strong>' + esc(money(power)) + '</strong>, ' +
+  'from a monthly surplus of <strong>' + esc(money(num(d.surplus))) + '</strong>. ' +
+  '<a href="index.html">Change those numbers</a>.</span>';
+
+rehydrate(form, d);
+
+/* First visit: start them at the top of their range rather than a blank box.
+   A zero here reads as "you can't afford anything", which is a lie. */
+if (!d.price) {
+  form.deposit.value = d.deposit || '';
+  form.price.value = Math.round(power / 5000) * 5000;
+}
+
+const slider = document.getElementById('priceSlider');
+
+function recalc() {
+  const deposit  = num(form.deposit.value);
+  const price    = num(form.price.value);
+  const maxSpend = power + deposit;
+  const loan     = Math.max(0, price - deposit);
+  const lvr      = price > 0 ? (loan / price) * 100 : 0;
+  const depPct   = price > 0 ? (deposit / price) * 100 : 0;
+
+  document.getElementById('maxSpend').textContent    = money(maxSpend);
+  document.getElementById('loanNeeded').textContent  = money(loan);
+  document.getElementById('depositPct').textContent  = pct(depPct, 1);
+  document.getElementById('maxNote').textContent     =
+    money(power) + ' borrowed plus ' + money(deposit) + ' of your own.';
+
+  document.getElementById('priceHint').textContent =
+    'Anything up to ' + money(maxSpend) + ' is within reach.';
+
+  slider.max   = Math.max(maxSpend * 1.25, 100000);
+  slider.value = Math.min(price, slider.max);
+
+  const flag = document.getElementById('flag');
+  const over = price - maxSpend;
+
+  if (price > 0 && over > 0) {
+    flag.className = 'flag';
+    flag.innerHTML = '<strong>' + esc(money(over)) + ' over your limit.</strong> ' +
+      'On these numbers you’d need a bigger deposit or a cheaper place.';
+    flag.setAttribute('data-shown', '');
+  } else if (price > 0 && lvr > ASSUMPTIONS.lmiThreshold) {
+    flag.className = 'flag flag--ok';
+    flag.innerHTML = 'Your loan is <strong>' + esc(pct(lvr, 1)) + '</strong> of the price. ' +
+      'Above ' + ASSUMPTIONS.lmiThreshold + '% you’d usually pay lenders mortgage insurance. ' +
+      'You’d need <strong>' + esc(money(price * 0.2)) + '</strong> down to avoid it.';
+    flag.setAttribute('data-shown', '');
+  } else if (price > 0) {
+    flag.className = 'flag flag--ok';
+    flag.innerHTML = 'Your loan is <strong>' + esc(pct(lvr, 1)) + '</strong> of the price — ' +
+      'at or under ' + ASSUMPTIONS.lmiThreshold + '%, so no lenders mortgage insurance.';
+    flag.setAttribute('data-shown', '');
+  } else {
+    flag.removeAttribute('data-shown');
+  }
+
+  return { deposit, price, maxSpend, loan, lvr };
+}
+
+slider.addEventListener('input', () => { form.price.value = slider.value; recalc(); });
+form.addEventListener('input', recalc);
+wireLiveClearing(form);
+recalc();
+
+form.addEventListener('submit', (e) => {
+  e.preventDefault();
+  if (!validate(form)) return;
+  const r = recalc();
+
+  if (r.price > r.maxSpend) {
+    const box = document.querySelector('.summary-error');
+    box.textContent = 'That price is beyond what you can borrow plus your deposit. Adjust one of them to continue.';
+    box.setAttribute('data-shown', '');
+    box.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    return;
+  }
+
+  Store.write({
+    deposit: r.deposit, price: r.price,
+    loan: Math.round(r.loan), lvr: r.lvr, maxSpend: r.maxSpend
+  });
+  location.href = 'step-3.html';
+});
+</script>
+
+</body>
+</html>

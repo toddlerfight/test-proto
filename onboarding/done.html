@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Account created</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+
+<div class="warnbar" role="alert">
+  <div class="warnbar__title">Research prototype — not a real service</div>
+  <div class="warnbar__sub">Nothing here is real. Do not enter real personal or financial details.</div>
+</div>
+
+
+<header class="masthead">
+  <div class="masthead__inner">
+    <div class="wordmark">Northline <span>Accounts</span></div>
+  </div>
+</header>
+
+<main class="shell">
+  <div class="card">
+    <div class="done__tick" aria-hidden="true">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+        <path d="M4 10.5 8 14.5 16 6" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <h1 class="card__title" id="title">Your account is open</h1>
+    <p class="card__lede" id="lede"></p>
+
+    <div class="carried" id="carried" style="margin-bottom:0"></div>
+
+    <div class="actions">
+      <span></span>
+      <a class="btn btn--ghost" href="#" data-restart>Run through it again</a>
+    </div>
+  </div>
+
+  <p class="footnote" style="margin-top:20px">
+    That's the end of the prototype. Thanks for taking part.
+  </p>
+</main>
+
+<script src="../app.js"></script>
+<script>
+Store.ns = 'proto.signup';
+
+/* Curtain call. Reads back their own details one last time so the ending
+ * doesn't feel like the tab just gave up on them. */
+const d    = Store.requires('firstName', 'email', 'accountType');
+const type = accountType(d);
+
+document.getElementById('title').textContent = 'You’re all set, ' + d.firstName + '.';
+document.getElementById('lede').textContent  =
+  'We’ve opened your ' + type.noun + ' and sent a confirmation to ' + d.email + '.';
+
+document.getElementById('carried').innerHTML =
+  '<span class="carried__mark" aria-hidden="true">i</span>' +
+  '<span>Next you’d verify your email, then set a password. This prototype stops here.</span>';
+</script>
+
+</body>
+</html>

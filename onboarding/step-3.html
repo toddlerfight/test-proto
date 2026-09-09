@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Review and confirm — Step 3 of 3</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+
+<div class="warnbar" role="alert">
+  <div class="warnbar__title">Research prototype — not a real service</div>
+  <div class="warnbar__sub">Nothing here is real. Do not enter real personal or financial details.</div>
+</div>
+
+
+<header class="masthead">
+  <div class="masthead__inner">
+    <div class="wordmark">Northline <span>Accounts</span></div>
+    <div class="wordmark" style="font-weight:450;color:var(--ink-faint)">Step 3 of 3</div>
+  </div>
+</header>
+
+<main class="shell">
+
+  <ol class="steps">
+    <li class="steps__item"><span class="steps__dot">1</span><span>About you</span></li>
+    <li class="steps__item"><span class="steps__dot">2</span><span>Your details</span></li>
+    <li class="steps__item"><span class="steps__dot">3</span><span>Review</span></li>
+  </ol>
+
+  <form class="card" id="form" novalidate>
+
+    <h1 class="card__title">Check this over before we open it</h1>
+    <p class="card__lede" id="lede"></p>
+
+    <div class="summary-error" role="alert">Some details need your attention. They're marked below.</div>
+
+    <div class="review" id="review"></div>
+
+    <div class="field" style="margin-top:20px" data-group-required data-error-id="err-consent"
+         data-msg-required="You'll need to accept the terms to continue." role="group">
+      <div class="checks">
+        <label class="check">
+          <input type="checkbox" name="consent" value="yes">
+          <span id="consentLabel"></span>
+        </label>
+      </div>
+      <p class="error" id="err-consent"></p>
+    </div>
+
+    <div class="actions">
+      <a class="btn btn--ghost" href="step-2.html">Back</a>
+      <button class="btn btn--primary" type="submit" id="submit">Open my account</button>
+    </div>
+
+  </form>
+
+  <p class="footnote" style="margin-top:20px">
+    Prototype for research. No data is sent anywhere. <a href="#" data-restart>Start over</a> &nbsp;·&nbsp; <a href="../">All prototypes</a>
+  </p>
+
+</main>
+
+<script src="../app.js"></script>
+<script>
+Store.ns = 'proto.signup';
+
+/* The receipt. Every single line on this page came from somewhere the
+ * participant typed, and every line links back to the step that owns it —
+ * with their answers intact when they get there. If the carry-through is
+ * broken anywhere, it shows up here first. */
+
+const d    = Store.requires('firstName', 'email', 'accountType', 'country', 'notify');
+const type = accountType(d);
+const geo  = country(d);
+const form = document.getElementById('form');
+
+markSteps(3);
+
+document.getElementById('lede').textContent =
+  'This is what we’ll set up. Change anything that isn’t right — you won’t lose your place.';
+
+document.getElementById('consentLabel').innerHTML =
+  'I accept the <strong>' + esc(type.label) + ' account terms</strong> and confirm these details are correct.' +
+  '<span class="check__note">' + esc(termsNote()) + '</span>';
+
+/* ---------- build the summary from whichever branch they took ---------- */
+
+const NOTIFY = {
+  email: 'Email to ' + d.email,
+  sms:   'Text message to ' + (d.phoneDisplay || ''),
+  both:  'Email and text message'
+};
+
+const aboutYou = [
+  ['Name',         [d.firstName, d.lastName].filter(Boolean).join(' ')],
+  ['Email',        d.email],
+  ['Based in',     geo.label],
+  ['Account type', type.label]
+];
+
+const branch = {
+  personal: [
+    ['Date of birth',  formatDate(d.dob)],
+    ['Mobile',         d.phoneDisplay],
+    ['Using it for',   listOut(d.uses, {
+      everyday: 'Everyday spending', saving: 'Saving towards something',
+      sharing: 'Splitting costs with other people'
+    })]
+  ],
+  business: [
+    ['Business name',  d.orgName],
+    [geo.regLabel,     d.regNumber],
+    ['Team size',      d.teamSize],
+    ['Industry',       d.industry],
+    ['Mobile',         d.phoneDisplay]
+  ],
+  nonprofit: [
+    ['Organisation',   d.orgName],
+    [geo.charity,      d.regNumber],
+    ['Cause area',     d.cause],
+    ['Mobile',         d.phoneDisplay]
+  ]
+}[d.accountType] || [];
+
+document.getElementById('review').innerHTML =
+  group('About you', 'index.html',  aboutYou) +
+  group(type.label + ' details', 'step-2.html', branch) +
+  group('Notifications', 'step-2.html', [['Send notices by', NOTIFY[d.notify] || d.notify]]);
+
+/* ---------- helpers ---------- */
+
+function group(title, href, rows) {
+  const body = rows
+    .filter(([, v]) => v)
+    .map(([k, v]) => '<dt>' + esc(k) + '</dt><dd>' + esc(v) + '</dd>')
+    .join('');
+  if (!body) return '';
+  return '<section class="review__group">' +
+           '<div class="review__head">' +
+             '<h2 class="review__title">' + esc(title) + '</h2>' +
+             '<a class="review__edit" href="' + href + '">Edit</a>' +
+           '</div>' +
+           '<dl class="review__list">' + body + '</dl>' +
+         '</section>';
+}
+
+function listOut(arr, labels) {
+  if (!Array.isArray(arr) || !arr.length) return '';
+  return arr.map((v) => labels[v] || v).join(', ');
+}
+
+function formatDate(iso) {
+  if (!iso) return '';
+  const [y, m, day] = iso.split('-');
+  if (!y || !m || !day) return iso;
+  const months = ['January','February','March','April','May','June','July',
+                  'August','September','October','November','December'];
+  return Number(day) + ' ' + months[Number(m) - 1] + ' ' + y;
+}
+
+function termsNote() {
+  if (d.accountType === 'business')  return 'Business accounts are subject to identity checks on the ' + geo.regLabel + ' provided.';
+  if (d.accountType === 'nonprofit') return 'Non-profit accounts are verified against your ' + geo.charity + '.';
+  return 'Personal accounts require you to be 18 or over.';
+}
+
+
+wireLiveClearing(form);
+
+form.addEventListener('submit', (e) => {
+  e.preventDefault();
+  if (!validate(form)) return;
+  Store.write({ consent: 'yes' });
+  location.href = 'done.html';
+});
+</script>
+
+</body>
+</html>
